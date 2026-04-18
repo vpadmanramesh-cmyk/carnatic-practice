@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shruti Box — Carnatic Practice Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        #bgCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        body {
+            font-family: 'Press Start 2P', 'Courier New', monospace;
+            background: #0a0a1e;
+            color: #c8c8e8;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── Header Banner ───────────────────────────── */
+
+        .header-banner {
+            background: rgba(18, 18, 46, 0.95);
+            border-bottom: 2px solid #2a2a5e;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            width: 100%;
+            box-shadow: 0 2px 20px rgba(0, 229, 255, 0.08);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 0.7rem;
+            font-weight: 400;
+            letter-spacing: 0.1em;
+            color: #00e5ff;
+            white-space: nowrap;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+
+        .header-divider {
+            width: 2px;
+            height: 20px;
+            background: #2a2a5e;
+        }
+
+        /* ── Shruti Buttons (inline in header) ────────── */
+
+        .shruti-grid {
+            display: flex;
+            gap: 3px;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .shruti-btn {
+            background: #1a1a3e;
+            border: 2px solid #2a2a5e;
+            border-radius: 2px;
+            padding: 4px 0;
+            width: 40px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            text-align: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .shruti-btn:hover {
+            border-color: #4a4a8e;
+            background: #22224a;
+        }
+
+        .shruti-btn.active {
+            background: #00e5ff;
+            border-color: #00e5ff;
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+        }
+
+        .shruti-number {
+            font-size: 0.5rem;
+            font-weight: 400;
+            color: #8888bb;
+            line-height: 1.4;
+        }
+
+        .shruti-btn.active .shruti-number { color: #0a0a1e; }
+
+        .western-note {
+            font-size: 0.35rem;
+            font-weight: 400;
+            color: #5a5a8a;
+            margin-top: 1px;
+        }
+
+        .shruti-btn.active .western-note { color: rgba(10,10,30,0.6); }
+
+        .frequency { display: none; }
+
+        /* ── Header Controls ─────────────────────────── */
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .volume-label {
+            font-size: 0.4rem;
+            font-weight: 400;
+            color: #5a5a8a;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 70px;
+            height: 3px;
+            background: #2a2a5e;
+            border-radius: 0;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 0;
+            background: #00e5ff;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 0;
+            background: #00e5ff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+
+        .status {
+            font-size: 0.4rem;
+            font-weight: 400;
+            color: #3a3a6e;
+            white-space: nowrap;
+            transition: color 0.3s;
+        }
+
+        .status.playing {
+            color: #00e5ff;
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+        }
+
+        /* ── Main Content (Pitch Area) ───────────────── */
+
+        .main-content {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem 1rem 0.25rem;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pitch-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0.4rem;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .listen-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: #00e5ff;
+            background: #12122e;
+            border: 2px solid #00e5ff;
+            border-radius: 2px;
+            padding: 8px 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .listen-btn:hover {
+            background: #1a1a4e;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+        }
+
+        .listen-btn.active {
+            background: #00e5ff;
+            color: #0a0a1e;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+        }
+
+        .listen-hint {
+            font-size: 0.35rem;
+            color: #3a3a6e;
+        }
+
+        /* ── Swara Buttons ───────────────────────────── */
+
+        .swara-buttons {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 0.4rem;
+        }
+
+        .swara-play-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.45rem;
+            font-weight: 400;
+            color: #8888bb;
+            background: #12122e;
+            border: 2px solid #2a2a5e;
+            border-radius: 2px;
+            padding: 5px 7px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .swara-play-btn:hover {
+            border-color: #4a4a8e;
+            background: #1a1a4e;
+        }
+
+        .swara-play-btn.active {
+            background: #ffaa22;
+            color: #0a0a1e;
+            border-color: #ffaa22;
+            box-shadow: 0 0 10px rgba(255, 170, 34, 0.4);
+        }
+
+        /* ── Tab Bar ─────────────────────────────────── */
+
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #2a2a5e;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .tab {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.55rem;
+            font-weight: 400;
+            color: #5a5a8a;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 8px 24px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tab:hover { color: #8888bb; }
+
+        .tab.active {
+            color: #00e5ff;
+            border-bottom-color: #00e5ff;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+        }
+
+        /* ── Gamakam Controls ────────────────────────── */
+
+        .gamakam-controls {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.4rem;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .gamakam-controls.visible { display: flex; }
+
+        .gamakam-select {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.4rem;
+            padding: 6px 8px;
+            border: 2px solid #2a2a5e;
+            border-radius: 2px;
+            background: #12122e;
+            color: #c8c8e8;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .gamakam-select:focus { border-color: #00e5ff; }
+
+        .gamakam-speed {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gamakam-speed-label {
+            font-size: 0.35rem;
+            font-weight: 400;
+            color: #5a5a8a;
+        }
+
+        .gamakam-hear-btn {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.4rem;
+            font-weight: 400;
+            color: #00ff88;
+            background: #12122e;
+            border: 2px solid #00ff88;
+            border-radius: 2px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .gamakam-hear-btn:hover {
+            background: #1a1a4e;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .gamakam-hear-btn.active {
+            background: #00ff88;
+            color: #0a0a1e;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+        }
+
+        .gamakam-score {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.45rem;
+            font-weight: 400;
+            color: #3a3a6e;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .gamakam-score.green  { color: #00ff88; text-shadow: 0 0 8px rgba(0, 255, 136, 0.5); }
+        .gamakam-score.yellow { color: #ffdd00; text-shadow: 0 0 8px rgba(255, 221, 0, 0.5); }
+        .gamakam-score.red    { color: #ff4466; text-shadow: 0 0 8px rgba(255, 68, 102, 0.5); }
+
+        /* ── Tuner Display ───────────────────────────── */
+
+        .tuner-display {
+            width: 100%;
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .tuner-display.visible { display: flex; }
+
+        .tuner-display { min-height: 0; }
+
+        .tuner-readout {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .readout-swara {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: #ffaa22;
+            line-height: 1;
+            min-width: 3ch;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(255, 170, 34, 0.5);
+        }
+
+        .readout-swara.silent { color: #2a2a5e; text-shadow: none; }
+
+        .readout-detail {
+            font-size: 0.45rem;
+            font-weight: 400;
+            color: #5a5a8a;
+        }
+
+        .readout-accuracy {
+            font-size: 0.5rem;
+            font-weight: 400;
+        }
+
+        .readout-accuracy.green  { color: #00ff88; text-shadow: 0 0 8px rgba(0, 255, 136, 0.5); }
+        .readout-accuracy.yellow { color: #ffdd00; text-shadow: 0 0 8px rgba(255, 221, 0, 0.5); }
+        .readout-accuracy.red    { color: #ff4466; text-shadow: 0 0 8px rgba(255, 68, 102, 0.5); }
+
+        .curve-container {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            margin-left: -50vw;
+            flex: 1;
+            min-height: 0;
+            border-top: 2px solid #2a2a5e;
+            border-bottom: 2px solid #2a2a5e;
+            overflow: hidden;
+            background: rgba(10, 10, 30, 0.95);
+        }
+
+        .curve-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .mic-error {
+            font-size: 0.4rem;
+            color: #ff4466;
+            margin-top: 0.5rem;
+        }
+
+        /* ── Responsive ──────────────────────────────── */
+
+        @media (max-width: 700px) {
+            .header-banner { padding: 8px 10px; gap: 8px; }
+            .shruti-btn { width: 34px; padding: 3px 0; }
+            .shruti-number { font-size: 0.4rem; }
+            .header-divider { display: none; }
+            h1 { font-size: 0.55rem; }
+            input[type="range"] { width: 50px; }
+        }
+
+        @media (max-width: 480px) {
+            .header-left { width: 100%; justify-content: space-between; }
+            .shruti-grid { width: 100%; }
+            .header-controls { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+    <div class="header-banner">
+        <div class="header-left">
+            <h1>SHRUTI BOX</h1>
+            <div class="header-divider"></div>
+        </div>
+        <div class="shruti-grid" id="shrutiGrid"></div>
+        <div class="header-controls">
+            <span class="volume-label">Vol</span>
+            <input type="range" id="volume" min="0" max="100" value="70">
+            <span class="status" id="status">Select a shruti</span>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="tab-bar">
+            <button class="tab active" id="tabPractice">Practice</button>
+            <button class="tab" id="tabGamakam">Gamakam</button>
+        </div>
+
+        <div class="pitch-header">
+            <button class="listen-btn" id="listenBtn">Start Listening</button>
+            <span class="listen-hint">Use headphones for best accuracy</span>
+        </div>
+
+        <div class="swara-buttons" id="swaraButtons"></div>
+
+        <div class="gamakam-controls" id="gamakamControls">
+            <select class="gamakam-select" id="gamakamSelect"></select>
+            <div class="gamakam-speed">
+                <span class="gamakam-speed-label">Speed</span>
+                <input type="range" id="gamakamSpeed" min="50" max="200" value="100">
+            </div>
+            <button class="gamakam-hear-btn" id="gamakamHearBtn">HEAR</button>
+            <span class="gamakam-score" id="gamakamScore">Score: --</span>
+        </div>
+
+        <div class="tuner-display" id="tunerDisplay">
+            <div class="tuner-readout">
+                <span class="readout-swara silent" id="swaraName">&mdash;</span>
+                <span class="readout-detail" id="readoutDetail"></span>
+                <span class="readout-accuracy" id="readoutAccuracy"></span>
+            </div>
+            <div class="curve-container" id="curveContainer">
+                <canvas id="pitchCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="mic-error" id="micError"></div>
+    </div>
+
+    <script>
+    // ── Shruti Mapping ──────────────────────────────────────────────
+    const SHRUTIS = [
+        { number: '1',  western: 'B',  hz: 123.47 },
+        { number: '1\u00BD', western: 'C',  hz: 130.81 },
+        { number: '2',  western: 'C\u266F', hz: 138.59 },
+        { number: '2\u00BD', western: 'D',  hz: 146.83 },
+        { number: '3',  western: 'D\u266F', hz: 155.56 },
+        { number: '3\u00BD', western: 'E',  hz: 164.81 },
+        { number: '4',  western: 'F',  hz: 174.61 },
+        { number: '4\u00BD', western: 'F\u266F', hz: 185.00 },
+        { number: '5',  western: 'G',  hz: 196.00 },
+        { number: '5\u00BD', western: 'G\u266F', hz: 207.65 },
+        { number: '6',  western: 'A',  hz: 220.00 },
+        { number: '6\u00BD', western: 'A\u266F', hz: 233.08 },
+        { number: '7',  western: 'B',  hz: 246.94 },
+    ];
+
+    const SWARAS = [
+        'S', 'R\u2081', 'R\u2082', 'G\u2082', 'G\u2083',
+        'M\u2081', 'M\u2082', 'P', 'D\u2081', 'D\u2082',
+        'N\u2082', 'N\u2083'
+    ];
+
+    // ── Gamakam Pattern Library ────────────────────────────────────
+    function kampitaCurve(center, amp, oscillations) {
+        return t => center + amp * Math.sin(2 * Math.PI * oscillations * t);
+    }
+
+    function jaruCurve(from, to) {
+        return t => {
+            const e = t < 0.15 ? 0 : t > 0.85 ? 1 : (t - 0.15) / 0.7;
+            const s = e * e * (3 - 2 * e); // smoothstep
+            return from + s * (to - from);
+        };
+    }
+
+    function brigaCurve(notes) {
+        return t => {
+            const ct = Math.min(t, 0.999);
+            const idx = ct * (notes.length - 1);
+            const i = Math.floor(idx);
+            const f = idx - i;
+            return notes[i] * (1 - f) + notes[Math.min(i + 1, notes.length - 1)] * f;
+        };
+    }
+
+    const GAMAKAM_PATTERNS = [
+        // Kampita — oscillation around a swara
+        { name: 'Kampita on R\u2082', type: 'Kampita', duration: 1.5, curve: kampitaCurve(2, 0.7, 3) },
+        { name: 'Kampita on G\u2083', type: 'Kampita', duration: 1.5, curve: kampitaCurve(4, 0.7, 3) },
+        { name: 'Kampita on M\u2081', type: 'Kampita', duration: 1.5, curve: kampitaCurve(5, 0.7, 3) },
+        { name: 'Kampita on D\u2082', type: 'Kampita', duration: 1.5, curve: kampitaCurve(9, 0.7, 3) },
+        { name: 'Kampita on N\u2083', type: 'Kampita', duration: 1.5, curve: kampitaCurve(11, 0.7, 3) },
+        // Jaru — smooth slide between swaras
+        { name: 'Jaru S \u2192 R\u2082', type: 'Jaru', duration: 1.2, curve: jaruCurve(0, 2) },
+        { name: 'Jaru S \u2192 G\u2083', type: 'Jaru', duration: 1.2, curve: jaruCurve(0, 4) },
+        { name: 'Jaru G\u2083 \u2192 R\u2082', type: 'Jaru', duration: 1.2, curve: jaruCurve(4, 2) },
+        { name: 'Jaru P \u2192 D\u2082', type: 'Jaru', duration: 1.2, curve: jaruCurve(7, 9) },
+        { name: 'Jaru N\u2083 \u2192 \u1E60', type: 'Jaru', duration: 1.2, curve: jaruCurve(11, 12) },
+        // Briga — fast runs through note sequences
+        { name: 'Briga S-R\u2082-S', type: 'Briga', duration: 1.0, curve: brigaCurve([0, 2, 0]) },
+        { name: 'Briga S-R\u2082-G\u2083-R\u2082-S', type: 'Briga', duration: 1.0, curve: brigaCurve([0, 2, 4, 2, 0]) },
+        { name: 'Briga G\u2083-M\u2081-P-M\u2081-G\u2083', type: 'Briga', duration: 1.0, curve: brigaCurve([4, 5, 7, 5, 4]) },
+        { name: 'Briga P-D\u2082-N\u2083-D\u2082-P', type: 'Briga', duration: 1.0, curve: brigaCurve([7, 9, 11, 9, 7]) },
+        { name: 'Briga S-R\u2082-G\u2083-M\u2081-P', type: 'Briga', duration: 1.0, curve: brigaCurve([0, 2, 4, 5, 7]) },
+    ];
+
+    // ── Tanpura Drone Engine ────────────────────────────────────────
+    class TanpuraDrone {
+        constructor() {
+            this.ctx = null;
+            this.isPlaying = false;
+            this.frequency = 220;
+            this.volume = 0.7;
+            this.masterGain = null;
+            this.compressor = null;
+            this.schedulerTimer = null;
+            this.nextPluckTime = 0;
+            this.stringIndex = 0;
+            this.jivariCurve = null;
+
+            this.strings = [
+                { ratio: 3 / 4, amp: 0.45 },
+                { ratio: 1,     amp: 0.65 },
+                { ratio: 1,     amp: 0.60 },
+                { ratio: 1 / 2, amp: 0.55 },
+            ];
+
+            this.stringDelays = [0.85, 0.85, 0.85, 1.70];
+        }
+
+        init() {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = this.volume;
+            this.compressor = this.ctx.createDynamicsCompressor();
+            this.compressor.threshold.value = -18;
+            this.compressor.knee.value = 12;
+            this.compressor.ratio.value = 4;
+            this.compressor.attack.value = 0.005;
+            this.compressor.release.value = 0.15;
+            this.masterGain.connect(this.compressor);
+            this.compressor.connect(this.ctx.destination);
+            this.jivariCurve = this._makeJivariCurve();
+        }
+
+        _makeJivariCurve() {
+            const n = 8192;
+            const curve = new Float32Array(n);
+            for (let i = 0; i < n; i++) {
+                const x = (2 * i) / n - 1;
+                curve[i] = Math.tanh(x * 2.0) * 0.78
+                         + 0.16 * Math.sin(Math.PI * x)
+                         + 0.06 * x * x * Math.sign(x);
+            }
+            return curve;
+        }
+
+        _pluck(freq, amp, time) {
+            const duration = 4.2;
+            const hAmps = [
+                0.40, 0.28, 0.16, 0.12, 0.09,
+                0.065, 0.045, 0.032, 0.024, 0.018, 0.013, 0.009
+            ];
+            const pluckGain = this.ctx.createGain();
+            const shaper = this.ctx.createWaveShaper();
+            shaper.curve = this.jivariCurve;
+            shaper.oversample = '2x';
+            pluckGain.connect(shaper);
+            shaper.connect(this.masterGain);
+            pluckGain.gain.setValueAtTime(0, time);
+            pluckGain.gain.linearRampToValueAtTime(amp * 0.45, time + 0.025);
+            pluckGain.gain.setTargetAtTime(amp * 0.28, time + 0.025, 0.6);
+            pluckGain.gain.setTargetAtTime(0.0001, time + duration * 0.55, duration * 0.25);
+            for (let h = 0; h < hAmps.length; h++) {
+                const harmFreq = freq * (h + 1);
+                if (harmFreq > 5500) break;
+                const osc = this.ctx.createOscillator();
+                const hGain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = harmFreq + (Math.random() - 0.5) * (0.3 + h * 0.2);
+                hGain.gain.setValueAtTime(0, time);
+                if (h < 3) {
+                    hGain.gain.linearRampToValueAtTime(hAmps[h], time + 0.015 + h * 0.008);
+                } else {
+                    const bloomPeak = 0.15 + h * 0.055;
+                    hGain.gain.setValueAtTime(hAmps[h] * 0.08, time + 0.02);
+                    hGain.gain.linearRampToValueAtTime(hAmps[h] * 1.25, time + bloomPeak);
+                    hGain.gain.setTargetAtTime(hAmps[h] * 0.45, time + bloomPeak, 0.35);
+                }
+                hGain.gain.setTargetAtTime(0.0001, time + duration * 0.5, duration * 0.28);
+                osc.connect(hGain);
+                hGain.connect(pluckGain);
+                osc.start(time);
+                osc.stop(time + duration + 0.3);
+            }
+        }
+
+        _schedule() {
+            const lookAhead = 1.2;
+            while (this.nextPluckTime < this.ctx.currentTime + lookAhead) {
+                const s = this.strings[this.stringIndex];
+                const freq = this.frequency * s.ratio;
+                const jitterT = (Math.random() - 0.5) * 0.04;
+                const jitterA = 1 + (Math.random() - 0.5) * 0.08;
+                this._pluck(freq, s.amp * jitterA, this.nextPluckTime + jitterT);
+                this.nextPluckTime += this.stringDelays[this.stringIndex];
+                this.stringIndex = (this.stringIndex + 1) % this.strings.length;
+            }
+        }
+
+        start(frequency) {
+            if (!this.ctx) this.init();
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            this.frequency = frequency;
+            this.isPlaying = true;
+            this.stringIndex = 0;
+            this.nextPluckTime = this.ctx.currentTime + 0.05;
+            this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+            this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+            this._schedule();
+            this.schedulerTimer = setInterval(() => this._schedule(), 180);
+        }
+
+        stop() {
+            this.isPlaying = false;
+            if (this.schedulerTimer) { clearInterval(this.schedulerTimer); this.schedulerTimer = null; }
+            if (this.masterGain) {
+                const now = this.ctx.currentTime;
+                this.masterGain.gain.cancelScheduledValues(now);
+                this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+                this.masterGain.gain.linearRampToValueAtTime(0, now + 0.6);
+            }
+        }
+
+        switchTo(frequency) {
+            this.frequency = frequency;
+            if (!this.isPlaying) return;
+            if (this.schedulerTimer) clearInterval(this.schedulerTimer);
+            this.stringIndex = 0;
+            this.nextPluckTime = this.ctx.currentTime + 0.15;
+            this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+            this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
+            this._schedule();
+            this.schedulerTimer = setInterval(() => this._schedule(), 180);
+        }
+
+        setVolume(v) {
+            this.volume = v;
+            if (this.masterGain && this.isPlaying) {
+                this.masterGain.gain.cancelScheduledValues(this.ctx.currentTime);
+                this.masterGain.gain.setValueAtTime(v, this.ctx.currentTime);
+            }
+        }
+    }
+
+    // ── Swara Tone Player ─────────────────────────────────────────────
+    class SwaraPlayer {
+        constructor() {
+            this.ctx = null;
+            this.oscillators = [];
+            this.gainNode = null;
+            this.activeSwaraIndex = -1;
+        }
+
+        _ensureContext() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.gainNode = this.ctx.createGain();
+                this.gainNode.gain.value = 0;
+                this.gainNode.connect(this.ctx.destination);
+            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+        }
+
+        play(swaraIndex, saHz) {
+            this._ensureContext();
+            this._stopOscillators();
+            const freq = saHz * Math.pow(2, swaraIndex / 12);
+            const harmonics = [
+                { ratio: 1, amp: 0.30 },
+                { ratio: 2, amp: 0.10 },
+                { ratio: 3, amp: 0.04 },
+            ];
+            this.oscillators = [];
+            for (const h of harmonics) {
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq * h.ratio;
+                g.gain.value = h.amp;
+                osc.connect(g);
+                g.connect(this.gainNode);
+                osc.start();
+                this.oscillators.push({ osc, gain: g });
+            }
+            this.gainNode.gain.cancelScheduledValues(this.ctx.currentTime);
+            this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.ctx.currentTime);
+            this.gainNode.gain.linearRampToValueAtTime(1, this.ctx.currentTime + 0.06);
+            this.activeSwaraIndex = swaraIndex;
+        }
+
+        _stopOscillators() {
+            if (this.oscillators.length > 0 && this.ctx) {
+                const now = this.ctx.currentTime;
+                this.gainNode.gain.cancelScheduledValues(now);
+                this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, now);
+                this.gainNode.gain.linearRampToValueAtTime(0, now + 0.06);
+                const oscs = this.oscillators;
+                setTimeout(() => oscs.forEach(o => { try { o.osc.stop(); } catch(e) {} }), 80);
+                this.oscillators = [];
+            }
+        }
+
+        stop() {
+            this._stopOscillators();
+            this.activeSwaraIndex = -1;
+        }
+
+        toggle(swaraIndex, saHz) {
+            if (this.activeSwaraIndex === swaraIndex) {
+                this.stop();
+                return false;
+            }
+            this.play(swaraIndex, saHz);
+            return true;
+        }
+    }
+
+    // ── Gamakam Audio Player ───────────────────────────────────────────
+    class GamakamPlayer {
+        constructor() {
+            this.ctx = null;
+            this.gainNode = null;
+            this.isPlaying = false;
+            this.scheduleTimer = null;
+            this.oscillators = [];
+        }
+
+        _ensureContext() {
+            if (!this.ctx) {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.gainNode = this.ctx.createGain();
+                this.gainNode.gain.value = 0.3;
+                this.gainNode.connect(this.ctx.destination);
+            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+        }
+
+        play(pattern, saHz, speedFactor) {
+            this._ensureContext();
+            this.stop();
+            this.isPlaying = true;
+            this.gainNode.gain.setValueAtTime(0.3, this.ctx.currentTime);
+
+            const harmonics = [
+                { ratio: 1, amp: 0.30 },
+                { ratio: 2, amp: 0.08 },
+            ];
+
+            // Create continuous oscillators that persist across cycles
+            this.oscillators = [];
+            for (const h of harmonics) {
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'sine';
+                g.gain.value = h.amp;
+                osc.connect(g);
+                g.connect(this.gainNode);
+                osc.start();
+                this.oscillators.push({ osc, gain: g, ratio: h.ratio });
+            }
+
+            // Schedule repeating frequency automation with no gaps
+            this._scheduleFrom(pattern, saHz, speedFactor, this.ctx.currentTime + 0.02);
+        }
+
+        _scheduleFrom(pattern, saHz, speedFactor, startTime) {
+            if (!this.isPlaying) return;
+            const duration = pattern.duration / speedFactor;
+            const steps = 80;
+
+            // Schedule frequency automation for this cycle on each oscillator
+            for (const h of this.oscillators) {
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const semitone = pattern.curve(t);
+                    const freq = saHz * Math.pow(2, semitone / 12) * h.ratio;
+                    const time = startTime + t * duration;
+                    if (i === 0) {
+                        h.osc.frequency.setValueAtTime(freq, time);
+                    } else {
+                        h.osc.frequency.linearRampToValueAtTime(freq, time);
+                    }
+                }
+            }
+
+            // Schedule next cycle seamlessly (zero gap)
+            const nextStart = startTime + duration;
+            const delayMs = (nextStart - this.ctx.currentTime - 0.3) * 1000;
+            this.scheduleTimer = setTimeout(() => {
+                this._scheduleFrom(pattern, saHz, speedFactor, nextStart);
+            }, Math.max(delayMs, 50));
+        }
+
+        stop() {
+            this.isPlaying = false;
+            if (this.scheduleTimer) {
+                clearTimeout(this.scheduleTimer);
+                this.scheduleTimer = null;
+            }
+            if (this.oscillators.length > 0 && this.ctx) {
+                const now = this.ctx.currentTime;
+                this.gainNode.gain.cancelScheduledValues(now);
+                this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, now);
+                this.gainNode.gain.linearRampToValueAtTime(0, now + 0.06);
+                const oscs = this.oscillators;
+                setTimeout(() => oscs.forEach(o => { try { o.osc.stop(); } catch(e) {} }), 80);
+            }
+            this.oscillators = [];
+        }
+    }
+
+    // ── Kalman Filter for Pitch Smoothing ────────────────────────────
+    class PitchKalmanFilter {
+        constructor() {
+            this.x = [220, 0]; // [pitch Hz, velocity Hz/frame]
+            this.P = [[100, 0], [0, 10]];
+            this.Q_base = 2.0;
+            this.R_base = 8.0;
+            this.initialized = false;
+        }
+
+        predict() {
+            this.x[0] += this.x[1];
+            const q = this.Q_base;
+            this.P[0][0] += 2 * this.P[0][1] + this.P[1][1] + q;
+            this.P[0][1] += this.P[1][1];
+            this.P[1][0] = this.P[0][1];
+            this.P[1][1] += q * 0.5;
+        }
+
+        update(measurement, confidence) {
+            const R = this.R_base / Math.max(confidence, 0.1);
+            const S = this.P[0][0] + R;
+            const K0 = this.P[0][0] / S;
+            const K1 = this.P[1][0] / S;
+            const y = measurement - this.x[0];
+            this.x[0] += K0 * y;
+            this.x[1] += K1 * y;
+            const P00 = this.P[0][0], P01 = this.P[0][1];
+            this.P[0][0] -= K0 * P00;
+            this.P[0][1] -= K0 * P01;
+            this.P[1][0] -= K1 * P00;
+            this.P[1][1] -= K1 * P01;
+            return this.x[0];
+        }
+
+        reset(pitch) {
+            this.x = [pitch, 0];
+            this.P = [[100, 0], [0, 10]];
+            this.initialized = true;
+        }
+    }
+
+    // ── Pitch Detector (McLeod Pitch Method + Kalman) ───────────────
+    class PitchDetector {
+        constructor() {
+            this.ctx = null;
+            this.analyser = null;
+            this.mediaStream = null;
+            this.isListening = false;
+            this.animFrameId = null;
+            this.lastDetectTime = 0;
+            this.rawPitches = [];
+            this.kalman = new PitchKalmanFilter();
+            this.silenceCount = 0;
+            this.onPitch = null;
+        }
+
+        async start() {
+            // Disable browser audio processing — it distorts pitch
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    autoGainControl: false,
+                    noiseSuppression: false
+                }
+            });
+            this.mediaStream = stream;
+            this.ctx = new AudioContext();
+            const source = this.ctx.createMediaStreamSource(stream);
+            this.analyser = this.ctx.createAnalyser();
+            this.analyser.fftSize = 2048;
+            source.connect(this.analyser);
+            this.isListening = true;
+            this.rawPitches = [];
+            this.kalman = new PitchKalmanFilter();
+            this.silenceCount = 0;
+            this._loop();
+        }
+
+        stop() {
+            this.isListening = false;
+            if (this.animFrameId) { cancelAnimationFrame(this.animFrameId); this.animFrameId = null; }
+            if (this.mediaStream) { this.mediaStream.getTracks().forEach(t => t.stop()); this.mediaStream = null; }
+            if (this.ctx) { this.ctx.close(); this.ctx = null; }
+        }
+
+        _loop() {
+            if (!this.isListening) return;
+            this.animFrameId = requestAnimationFrame(() => this._loop());
+
+            const now = performance.now();
+            if (now - this.lastDetectTime < 33) return; // ~30fps
+            this.lastDetectTime = now;
+
+            const buf = new Float32Array(this.analyser.fftSize);
+            this.analyser.getFloatTimeDomainData(buf);
+            const result = this._detectMPM(buf, this.ctx.sampleRate);
+
+            if (result.pitch > 0) {
+                // Initialize Kalman on first detection
+                if (!this.kalman.initialized) {
+                    this.kalman.reset(result.pitch);
+                }
+
+                // Octave-jump correction
+                let pitch = result.pitch;
+                const ratio = pitch / this.kalman.x[0];
+                if (ratio > 1.8 && ratio < 2.2) pitch /= 2;
+                else if (ratio > 0.45 && ratio < 0.55) pitch *= 2;
+
+                this.kalman.predict();
+                const smoothed = this.kalman.update(pitch, result.confidence);
+                this.silenceCount = 0;
+                if (this.onPitch) this.onPitch(smoothed);
+            } else {
+                this.silenceCount++;
+                // Reset Kalman after sustained silence so next phrase starts fresh
+                if (this.silenceCount > 10) {
+                    this.kalman.initialized = false;
+                    this.rawPitches.length = 0;
+                }
+                if (this.onPitch) this.onPitch(-1);
+            }
+        }
+
+        // McLeod Pitch Method — uses Normalized Square Difference Function
+        _detectMPM(buf, sampleRate) {
+            const SIZE = buf.length;
+
+            // RMS silence gate
+            let rms = 0;
+            for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+            rms = Math.sqrt(rms / SIZE);
+            if (rms < 0.008) return { pitch: -1, confidence: 0 };
+
+            // Compute NSDF: nsdf(τ) = 2·r(τ) / m(τ)
+            const maxLag = Math.floor(SIZE / 2);
+            const nsdf = new Float32Array(maxLag);
+
+            for (let tau = 0; tau < maxLag; tau++) {
+                let acf = 0, m = 0;
+                for (let j = 0; j < maxLag - tau; j++) {
+                    acf += buf[j] * buf[j + tau];
+                    m += buf[j] * buf[j] + buf[j + tau] * buf[j + tau];
+                }
+                nsdf[tau] = m > 0 ? (2 * acf) / m : 0;
+            }
+
+            // Find first positive-going zero crossing
+            let firstZC = 1;
+            while (firstZC < maxLag - 1 && nsdf[firstZC] > 0) firstZC++;
+
+            // Collect peaks after first zero crossing
+            const peaks = [];
+            for (let i = firstZC + 1; i < maxLag - 1; i++) {
+                if (nsdf[i] > nsdf[i - 1] && nsdf[i] >= nsdf[i + 1] && nsdf[i] > 0) {
+                    peaks.push({ index: i, value: nsdf[i] });
+                }
+            }
+
+            if (peaks.length === 0) return { pitch: -1, confidence: 0 };
+
+            // Key threshold: select first peak >= 93% of max peak
+            const maxPeak = Math.max(...peaks.map(p => p.value));
+            const thresh = 0.93 * maxPeak;
+            let selected = peaks[peaks.length - 1];
+            for (const p of peaks) {
+                if (p.value >= thresh) { selected = p; break; }
+            }
+
+            // Parabolic interpolation for sub-sample accuracy
+            let T0 = selected.index;
+            if (T0 > 0 && T0 < maxLag - 1) {
+                const s0 = nsdf[T0 - 1], s1 = nsdf[T0], s2 = nsdf[T0 + 1];
+                const a = (s0 + s2 - 2 * s1) / 2;
+                const b = (s2 - s0) / 2;
+                if (a !== 0) T0 -= b / (2 * a);
+            }
+
+            const pitch = sampleRate / T0;
+            const confidence = Math.min(selected.value, 1.0);
+
+            // Sanity bounds
+            if (pitch < 50 || pitch > 2000) return { pitch: -1, confidence: 0 };
+
+            // Median filter (3 frames) to reject single-frame outliers
+            this.rawPitches.push(pitch);
+            if (this.rawPitches.length > 3) this.rawPitches.shift();
+            if (this.rawPitches.length >= 3) {
+                const sorted = [...this.rawPitches].sort((a, b) => a - b);
+                return { pitch: sorted[1], confidence };
+            }
+
+            return { pitch, confidence };
+        }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+    function freqToSwara(freq, saFreq) {
+        const semitones = 12 * Math.log2(freq / saFreq);
+        const normalized = ((semitones % 12) + 12) % 12;
+        const nearest = Math.round(normalized) % 12;
+        const cents = Math.round((normalized - Math.round(normalized)) * 100);
+
+        const octaveOffset = Math.floor((semitones + 0.5) / 12);
+        let sthayi;
+        if (octaveOffset < 0) sthayi = 'Mandra';
+        else if (octaveOffset === 0) sthayi = 'Madhya';
+        else sthayi = 'Tara';
+
+        return { swara: SWARAS[nearest], cents, sthayi, semitones: normalized };
+    }
+
+    // ── Pitch Curve ─────────────────────────────────────────────────
+    const HISTORY_SIZE = 240; // ~8 seconds at 30fps
+    const Y_MIN = -5;   // Mandra P (semitones from Sa)
+    const Y_MAX = 19;   // Tara P
+    const Y_RANGE = Y_MAX - Y_MIN; // 24 semitones
+    const pitchHistory = new Array(HISTORY_SIZE).fill(null);
+    let historyWriteIdx = 0;
+    let canvasCtx = null;
+    let dims = null;
+
+    function initCanvas() {
+        const container = document.getElementById('curveContainer');
+        const canvas = document.getElementById('pitchCanvas');
+        const w = container.offsetWidth;
+        const h = container.offsetHeight || 300;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = w * dpr;
+        canvas.height = h * dpr;
+        canvas.style.height = h + 'px';
+        canvasCtx = canvas.getContext('2d');
+        canvasCtx.scale(dpr, dpr);
+        dims = {
+            w, h,
+            labelW: 42,
+            padTop: 16,
+            padBot: 16,
+        };
+        dims.graphW = dims.w - dims.labelW;
+        dims.graphH = dims.h - dims.padTop - dims.padBot;
+    }
+
+    function drawCanvas() {
+        if (!canvasCtx || !dims) return;
+        const { w, h, labelW, padTop, graphW, graphH } = dims;
+        const ctx = canvasCtx;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Background bands (alternating stripes, 24 bands from mandra P to tara P)
+        for (let semi = Y_MIN; semi < Y_MAX; semi++) {
+            const bandIdx = semi - Y_MIN;
+            const yTop = padTop + (1 - (semi + 1 - Y_MIN) / Y_RANGE) * graphH;
+            const bandH = graphH / Y_RANGE;
+            ctx.fillStyle = bandIdx % 2 === 0 ? '#0e0e22' : '#12122a';
+            ctx.fillRect(labelW, yTop, graphW, bandH);
+        }
+
+        // Highlight active swara band
+        if (swaraPlayer.activeSwaraIndex >= 0) {
+            for (let semi = Y_MIN; semi < Y_MAX; semi++) {
+                const swaraIdx = ((semi % 12) + 12) % 12;
+                if (swaraIdx === swaraPlayer.activeSwaraIndex) {
+                    const yTop = padTop + (1 - (semi + 1 - Y_MIN) / Y_RANGE) * graphH;
+                    const bandH = graphH / Y_RANGE;
+                    ctx.fillStyle = 'rgba(255, 170, 34, 0.12)';
+                    ctx.fillRect(labelW, yTop, graphW, bandH);
+                }
+            }
+        }
+
+        // Gridlines at each semitone boundary
+        for (let semi = Y_MIN; semi <= Y_MAX; semi++) {
+            const y = padTop + (1 - (semi - Y_MIN) / Y_RANGE) * graphH;
+            const swaraIdx = ((semi % 12) + 12) % 12;
+            const isSa = (swaraIdx === 0);
+            const isP = (swaraIdx === 7);
+            const prominent = isSa || isP;
+            ctx.strokeStyle = prominent ? '#3a3a6e' : '#1a1a3a';
+            ctx.lineWidth = prominent ? 1.5 : 0.5;
+            ctx.beginPath();
+            ctx.moveTo(labelW, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        // Swara labels (centered in each band)
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        for (let semi = Y_MIN; semi < Y_MAX; semi++) {
+            const swaraIdx = ((semi % 12) + 12) % 12;
+            const swaraName = SWARAS[swaraIdx];
+            const isMandra = semi < 0;
+            const isTara = semi >= 12;
+            const isSa = (swaraIdx === 0);
+            const isP = (swaraIdx === 7);
+            const y = padTop + (1 - (semi + 0.5 - Y_MIN) / Y_RANGE) * graphH;
+
+            if (isSa || isP) {
+                ctx.fillStyle = (isMandra || isTara) ? '#5a5a9a' : '#8888cc';
+                ctx.font = (isMandra || isTara)
+                    ? '7px "Press Start 2P", monospace'
+                    : '8px "Press Start 2P", monospace';
+            } else {
+                ctx.fillStyle = (isMandra || isTara) ? '#2a2a5a' : '#4a4a7a';
+                ctx.font = (isMandra || isTara)
+                    ? '5px "Press Start 2P", monospace'
+                    : '6px "Press Start 2P", monospace';
+            }
+
+            ctx.fillText(swaraName, labelW - 6, y);
+        }
+
+        // Left border of graph area
+        ctx.strokeStyle = '#2a2a5e';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(labelW, padTop);
+        ctx.lineTo(labelW, padTop + graphH);
+        ctx.stroke();
+
+        // ── Draw reference curve (gamakam mode) ──────────
+        if (activeTab === 'gamakam') {
+            const pattern = GAMAKAM_PATTERNS[selectedPatternIdx];
+            const effectiveDuration = pattern.duration / gamakamSpeedFactor;
+            const framesPerCycle = Math.round(effectiveDuration * 30);
+
+            const refPoints = [];
+            for (let i = 0; i < HISTORY_SIZE; i++) {
+                const frameNum = gamakamFrameCount - (HISTORY_SIZE - 1 - i);
+                const cyclePos = ((frameNum % framesPerCycle) + framesPerCycle) % framesPerCycle;
+                const t = cyclePos / framesPerCycle;
+                const semitone = pattern.curve(t);
+
+                const x = labelW + (i / (HISTORY_SIZE - 1)) * graphW;
+                const y = padTop + (1 - (semitone - Y_MIN) / Y_RANGE) * graphH;
+                refPoints.push({ x, y });
+            }
+
+            // Reference glow
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            drawSpline(ctx, refPoints);
+            ctx.restore();
+
+            // Reference main line
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            drawSpline(ctx, refPoints);
+            ctx.restore();
+        }
+
+        // ── Build continuous point segments ──────────────
+        const segments = [];
+        let seg = [];
+
+        for (let i = 0; i < HISTORY_SIZE; i++) {
+            const idx = (historyWriteIdx + i) % HISTORY_SIZE;
+            const val = pitchHistory[idx];
+
+            if (val === null) {
+                if (seg.length >= 2) segments.push(seg);
+                seg = [];
+                continue;
+            }
+
+            // Break on large jumps (octave wraps)
+            if (seg.length > 0) {
+                const prevIdx = (historyWriteIdx + i - 1) % HISTORY_SIZE;
+                const prevVal = pitchHistory[prevIdx];
+                if (prevVal !== null && Math.abs(val - prevVal) > 6) {
+                    if (seg.length >= 2) segments.push(seg);
+                    seg = [];
+                }
+            }
+
+            const x = labelW + (i / (HISTORY_SIZE - 1)) * graphW;
+            const y = padTop + (1 - (val - Y_MIN) / Y_RANGE) * graphH;
+            seg.push({ x, y });
+        }
+        if (seg.length >= 2) segments.push(seg);
+
+        // ── Draw smooth Catmull-Rom spline curves ────────
+
+        // Glow layer (drawn first, behind the main line)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 170, 34, 0.25)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (const pts of segments) {
+            drawSpline(ctx, pts);
+        }
+        ctx.restore();
+
+        // Main line
+        ctx.save();
+        ctx.strokeStyle = '#ffaa22';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowColor = 'rgba(255, 170, 34, 0.4)';
+        ctx.shadowBlur = 8;
+        for (const pts of segments) {
+            drawSpline(ctx, pts);
+        }
+        ctx.restore();
+
+        // Current position dot
+        if (segments.length > 0) {
+            const lastSeg = segments[segments.length - 1];
+            const lastPt = lastSeg[lastSeg.length - 1];
+            // Only draw if it's near the right edge (recent data)
+            if (lastPt.x > w - graphW * 0.05) {
+                ctx.beginPath();
+                ctx.arc(lastPt.x, lastPt.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffaa22';
+                ctx.shadowColor = 'rgba(255, 170, 34, 0.6)';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+    }
+
+    // Catmull-Rom spline → cubic Bézier, draws a smooth curve through all points
+    function drawSpline(ctx, pts) {
+        if (pts.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+
+        if (pts.length === 2) {
+            ctx.lineTo(pts[1].x, pts[1].y);
+        } else {
+            for (let i = 0; i < pts.length - 1; i++) {
+                const p0 = pts[Math.max(i - 1, 0)];
+                const p1 = pts[i];
+                const p2 = pts[i + 1];
+                const p3 = pts[Math.min(i + 2, pts.length - 1)];
+
+                const cp1x = p1.x + (p2.x - p0.x) / 6;
+                const cp1y = p1.y + (p2.y - p0.y) / 6;
+                const cp2x = p2.x - (p3.x - p1.x) / 6;
+                const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+                ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+            }
+        }
+        ctx.stroke();
+    }
+
+    // ── UI ───────────────────────────────────────────────────────────
+    const drone = new TanpuraDrone();
+    const pitcher = new PitchDetector();
+    const swaraPlayer = new SwaraPlayer();
+    const gamakamPlayer = new GamakamPlayer();
+    let activeShruti = null;
+    let selectedSaHz = 220;
+    let activeTab = 'practice';
+    let selectedPatternIdx = 0;
+    let gamakamFrameCount = 0;
+    let gamakamSpeedFactor = 1.0;
+    let gamakamMatchCount = 0;
+    let gamakamTotalCount = 0;
+
+    const grid       = document.getElementById('shrutiGrid');
+    const statusEl   = document.getElementById('status');
+    const volSlider  = document.getElementById('volume');
+    const listenBtn  = document.getElementById('listenBtn');
+    const tunerDisp  = document.getElementById('tunerDisplay');
+    const swaraEl    = document.getElementById('swaraName');
+    const detailEl   = document.getElementById('readoutDetail');
+    const accEl      = document.getElementById('readoutAccuracy');
+    const micErrorEl = document.getElementById('micError');
+
+    // Build shruti buttons
+    SHRUTIS.forEach((s, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'shruti-btn';
+        btn.innerHTML =
+            `<div class="shruti-number">${s.number}</div>` +
+            `<div class="western-note">${s.western}</div>` +
+            `<div class="frequency">${s.hz.toFixed(1)} Hz</div>`;
+        btn.addEventListener('click', () => toggleShruti(i));
+        grid.appendChild(btn);
+    });
+
+    function toggleShruti(index) {
+        const buttons = grid.querySelectorAll('.shruti-btn');
+        const s = SHRUTIS[index];
+
+        if (activeShruti === index) {
+            drone.stop();
+            buttons[index].classList.remove('active');
+            activeShruti = null;
+            statusEl.textContent = 'Select a shruti';
+            statusEl.classList.remove('playing');
+        } else {
+            buttons.forEach(b => b.classList.remove('active'));
+            buttons[index].classList.add('active');
+            selectedSaHz = s.hz;
+            if (activeShruti !== null) { drone.switchTo(s.hz); }
+            else { drone.start(s.hz); }
+            activeShruti = index;
+            statusEl.textContent = `${s.number} \u2014 ${s.western} (${s.hz.toFixed(0)} Hz)`;
+            statusEl.classList.add('playing');
+            // Re-tune swara player if a swara is active
+            if (swaraPlayer.activeSwaraIndex >= 0) {
+                swaraPlayer.play(swaraPlayer.activeSwaraIndex, selectedSaHz);
+            }
+        }
+    }
+
+    volSlider.addEventListener('input', e => drone.setVolume(e.target.value / 100));
+
+    // Build swara buttons
+    const swaraButtonsEl = document.getElementById('swaraButtons');
+    SWARAS.forEach((name, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'swara-play-btn';
+        btn.textContent = name;
+        btn.addEventListener('click', () => {
+            const playing = swaraPlayer.toggle(i, selectedSaHz);
+            swaraButtonsEl.querySelectorAll('.swara-play-btn').forEach(b => b.classList.remove('active'));
+            if (playing) btn.classList.add('active');
+            drawCanvas();
+        });
+        swaraButtonsEl.appendChild(btn);
+    });
+
+    // ── Gamakam UI Setup ─────────────────────────────────────────────
+    const tabPractice = document.getElementById('tabPractice');
+    const tabGamakam = document.getElementById('tabGamakam');
+    const gamakamControlsEl = document.getElementById('gamakamControls');
+    const gamakamSelectEl = document.getElementById('gamakamSelect');
+    const gamakamScoreEl = document.getElementById('gamakamScore');
+    const gamakamSpeedEl = document.getElementById('gamakamSpeed');
+
+    // Build pattern dropdown with optgroups
+    ['Kampita', 'Jaru', 'Briga'].forEach(type => {
+        const group = document.createElement('optgroup');
+        group.label = type;
+        GAMAKAM_PATTERNS.forEach((p, i) => {
+            if (p.type === type) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = p.name;
+                group.appendChild(opt);
+            }
+        });
+        gamakamSelectEl.appendChild(group);
+    });
+
+    const gamakamHearBtn = document.getElementById('gamakamHearBtn');
+
+    gamakamSelectEl.addEventListener('change', e => {
+        selectedPatternIdx = parseInt(e.target.value);
+        gamakamMatchCount = 0;
+        gamakamTotalCount = 0;
+        gamakamScoreEl.textContent = 'Score: --';
+        gamakamScoreEl.className = 'gamakam-score';
+        // Restart hear if active
+        if (gamakamPlayer.isPlaying) {
+            gamakamPlayer.play(GAMAKAM_PATTERNS[selectedPatternIdx], selectedSaHz, gamakamSpeedFactor);
+        }
+    });
+
+    gamakamSpeedEl.addEventListener('input', e => {
+        gamakamSpeedFactor = e.target.value / 100;
+        // Update hear playback speed if active
+        if (gamakamPlayer.isPlaying) {
+            gamakamPlayer.play(GAMAKAM_PATTERNS[selectedPatternIdx], selectedSaHz, gamakamSpeedFactor);
+        }
+    });
+
+    gamakamHearBtn.addEventListener('click', () => {
+        if (gamakamPlayer.isPlaying) {
+            gamakamPlayer.stop();
+            gamakamHearBtn.classList.remove('active');
+            gamakamHearBtn.textContent = 'HEAR';
+        } else {
+            gamakamPlayer.play(GAMAKAM_PATTERNS[selectedPatternIdx], selectedSaHz, gamakamSpeedFactor);
+            gamakamHearBtn.classList.add('active');
+            gamakamHearBtn.textContent = 'STOP';
+        }
+    });
+
+    tabPractice.addEventListener('click', () => {
+        activeTab = 'practice';
+        tabPractice.classList.add('active');
+        tabGamakam.classList.remove('active');
+        gamakamControlsEl.classList.remove('visible');
+        gamakamPlayer.stop();
+        gamakamHearBtn.classList.remove('active');
+        gamakamHearBtn.textContent = 'HEAR';
+    });
+
+    tabGamakam.addEventListener('click', () => {
+        activeTab = 'gamakam';
+        tabGamakam.classList.add('active');
+        tabPractice.classList.remove('active');
+        gamakamControlsEl.classList.add('visible');
+        gamakamMatchCount = 0;
+        gamakamTotalCount = 0;
+        gamakamFrameCount = 0;
+        gamakamScoreEl.textContent = 'Score: --';
+        gamakamScoreEl.className = 'gamakam-score';
+    });
+
+    // ── Tuner Callbacks ─────────────────────────────────────────────
+    let silenceFrames = 0;
+
+    pitcher.onPitch = (freq) => {
+        // Gamakam frame counter (always ticks so reference curve scrolls)
+        gamakamFrameCount++;
+
+        // Push to history
+        if (freq < 0) {
+            pitchHistory[historyWriteIdx] = null;
+        } else {
+            const raw = 12 * Math.log2(freq / selectedSaHz);
+            pitchHistory[historyWriteIdx] = raw;
+
+            // Gamakam scoring
+            if (activeTab === 'gamakam') {
+                const pattern = GAMAKAM_PATTERNS[selectedPatternIdx];
+                const effectiveDuration = pattern.duration / gamakamSpeedFactor;
+                const framesPerCycle = Math.round(effectiveDuration * 30);
+                const cyclePos = ((gamakamFrameCount % framesPerCycle) + framesPerCycle) % framesPerCycle;
+                const t = cyclePos / framesPerCycle;
+                const expected = pattern.curve(t);
+                const diff = Math.abs(raw - expected);
+
+                if (diff <= 0.5) gamakamMatchCount += 1.0;
+                else if (diff <= 1.0) gamakamMatchCount += 0.5;
+                gamakamTotalCount++;
+
+                if (gamakamTotalCount > 10) {
+                    const score = Math.round((gamakamMatchCount / gamakamTotalCount) * 100);
+                    gamakamScoreEl.textContent = `Score: ${score}%`;
+                    if (score >= 80) gamakamScoreEl.className = 'gamakam-score green';
+                    else if (score >= 60) gamakamScoreEl.className = 'gamakam-score yellow';
+                    else gamakamScoreEl.className = 'gamakam-score red';
+                }
+            }
+        }
+        historyWriteIdx = (historyWriteIdx + 1) % HISTORY_SIZE;
+
+        // Update readout
+        if (freq < 0) {
+            silenceFrames++;
+            if (silenceFrames > 15) {
+                swaraEl.textContent = '\u2014';
+                swaraEl.classList.add('silent');
+                detailEl.textContent = '';
+                accEl.textContent = '';
+                accEl.className = 'readout-accuracy';
+            }
+        } else {
+            silenceFrames = 0;
+            const { swara, cents, sthayi } = freqToSwara(freq, selectedSaHz);
+            const absCents = Math.abs(cents);
+
+            swaraEl.textContent = swara;
+            swaraEl.classList.remove('silent');
+
+            const sign = cents > 0 ? '+' : '';
+            detailEl.textContent = sthayi + ' \u00B7 ' + sign + cents + '\u00A2';
+
+            let color, label;
+            if (absCents <= 10) { color = 'green'; label = 'In Shruti'; }
+            else if (absCents <= 25) { color = 'yellow'; label = 'Slightly Off'; }
+            else { color = 'red'; label = 'Off Pitch'; }
+
+            accEl.textContent = label;
+            accEl.className = 'readout-accuracy ' + color;
+        }
+
+        // Draw curve
+        drawCanvas();
+    };
+
+    // ── Listen Button ───────────────────────────────────────────────
+    listenBtn.addEventListener('click', async () => {
+        micErrorEl.textContent = '';
+        if (pitcher.isListening) {
+            pitcher.stop();
+            listenBtn.classList.remove('active');
+            listenBtn.textContent = 'Start Listening';
+            tunerDisp.classList.remove('visible');
+        } else {
+            try {
+                await pitcher.start();
+                listenBtn.classList.add('active');
+                listenBtn.textContent = 'Stop Listening';
+                tunerDisp.classList.add('visible');
+                // Init canvas after display is visible
+                setTimeout(() => {
+                    initCanvas();
+                    pitchHistory.fill(null);
+                    historyWriteIdx = 0;
+                }, 30);
+            } catch (e) {
+                micErrorEl.textContent = 'Microphone access denied. Please allow mic access and try again.';
+            }
+        }
+    });
+
+    // Reinit canvas on resize
+    window.addEventListener('resize', () => {
+        if (pitcher.isListening) initCanvas();
+        drawBackground();
+    });
+
+    // ── Pixel Art Background Scene ──────────────────────────────────
+    function drawBackground() {
+        const bgCanvas = document.getElementById('bgCanvas');
+        const dpr = window.devicePixelRatio || 1;
+        bgCanvas.width = window.innerWidth * dpr;
+        bgCanvas.height = window.innerHeight * dpr;
+
+        const PW = 240, PH = 150;
+        const off = document.createElement('canvas');
+        off.width = PW; off.height = PH;
+        const c = off.getContext('2d');
+        const floorY = 95;
+
+        // ── Wall ──
+        c.fillStyle = '#1a1a38'; c.fillRect(0, 0, PW, 30);
+        c.fillStyle = '#16162e'; c.fillRect(0, 30, PW, 35);
+        c.fillStyle = '#12122a'; c.fillRect(0, 65, PW, floorY - 65);
+        // Wainscoting
+        c.fillStyle = '#14142a'; c.fillRect(0, floorY - 18, PW, 15);
+        c.fillStyle = '#1e1e3a'; c.fillRect(0, floorY - 18, PW, 1);
+
+        // ── Floor ──
+        c.fillStyle = '#1a0e06'; c.fillRect(0, floorY, PW, PH - floorY);
+        c.fillStyle = '#221408';
+        for (let y = floorY; y < PH; y += 7) c.fillRect(0, y, PW, 1);
+        c.fillStyle = '#180c04';
+        for (let x = 0; x < PW; x += 20) c.fillRect(x, floorY, 1, PH - floorY);
+        // Baseboard
+        c.fillStyle = '#2a1a10'; c.fillRect(0, floorY - 3, PW, 3);
+
+        // ── Window ──
+        const wx = PW - 58, wy = 15, ww = 36, wh = 46;
+        c.fillStyle = '#060618'; c.fillRect(wx, wy, ww, wh);
+        c.fillStyle = '#0a0a28'; c.fillRect(wx, wy, ww, Math.floor(wh / 2));
+        // Moon (crescent)
+        c.fillStyle = '#FFFFC8'; c.fillRect(wx + 6, wy + 7, 7, 7);
+        c.fillStyle = '#EEEEAA'; c.fillRect(wx + 6, wy + 7, 5, 5);
+        c.fillStyle = '#060618'; c.fillRect(wx + 4, wy + 5, 5, 7);
+        // Stars
+        c.fillStyle = '#FFE8C0';
+        [[wx+24,wy+6],[wx+30,wy+4],[wx+14,wy+32],[wx+28,wy+26],
+         [wx+20,wy+18],[wx+32,wy+38],[wx+8,wy+40]].forEach(([x,y]) =>
+            c.fillRect(x, y, 2, 2));
+        c.fillStyle = '#665544';
+        [[wx+17,wy+10],[wx+26,wy+15],[wx+9,wy+22],[wx+31,wy+32]].forEach(([x,y]) =>
+            c.fillRect(x, y, 1, 1));
+        // Frame
+        c.fillStyle = '#3a2a1a';
+        c.fillRect(wx-2, wy-2, ww+4, 2);
+        c.fillRect(wx-2, wy+wh, ww+4, 2);
+        c.fillRect(wx-2, wy-2, 2, wh+4);
+        c.fillRect(wx+ww, wy-2, 2, wh+4);
+        c.fillRect(wx + Math.floor(ww/2) - 1, wy, 2, wh);
+        c.fillRect(wx, wy + Math.floor(wh/2) - 1, ww, 2);
+        // Sill
+        c.fillStyle = '#4a3a2a'; c.fillRect(wx - 4, wy + wh, ww + 8, 3);
+        // Moonlight on floor
+        c.fillStyle = 'rgba(180,200,240,0.03)'; c.fillRect(wx - 15, floorY, 65, PH - floorY);
+
+        // ── Tanpura ──
+        const tx = 40, tB = floorY - 3;
+        // Shadow
+        c.fillStyle = 'rgba(0,0,0,0.15)'; c.fillRect(tx - 10, tB + 1, 22, 4);
+        // Gourd
+        c.fillStyle = '#5C3310'; c.fillRect(tx - 8, tB - 22, 18, 20);
+        c.fillStyle = '#6B4226'; c.fillRect(tx - 6, tB - 24, 14, 22);
+        c.fillStyle = '#8B5E3C'; c.fillRect(tx - 3, tB - 20, 4, 12);
+        c.fillStyle = '#3a1a08'; c.fillRect(tx - 1, tB - 14, 3, 3);
+        // Neck
+        c.fillStyle = '#6B4226'; c.fillRect(tx - 1, tB - 82, 4, 60);
+        c.fillStyle = '#8B5E3C'; c.fillRect(tx, tB - 80, 1, 56);
+        // Pegbox
+        c.fillStyle = '#5C3310'; c.fillRect(tx - 2, tB - 88, 6, 8);
+        c.fillStyle = '#4a2808'; c.fillRect(tx - 1, tB - 86, 4, 4);
+        // Pegs
+        c.fillStyle = '#2a2a2a';
+        c.fillRect(tx - 4, tB - 84, 3, 2);
+        c.fillRect(tx + 3, tB - 86, 3, 2);
+        c.fillRect(tx - 4, tB - 88, 3, 2);
+        c.fillRect(tx + 3, tB - 90, 3, 2);
+        // Top ornament
+        c.fillStyle = '#7A4B28'; c.fillRect(tx - 1, tB - 92, 4, 4);
+        c.fillStyle = '#B8860B'; c.fillRect(tx, tB - 93, 2, 2);
+        // Strings
+        c.fillStyle = '#FFD700'; c.fillRect(tx, tB - 82, 1, 58);
+        c.fillStyle = '#DAA520'; c.fillRect(tx + 1, tB - 82, 1, 58);
+        // Bridge
+        c.fillStyle = '#3a2a1a'; c.fillRect(tx - 3, tB - 24, 8, 2);
+        // Tailpiece
+        c.fillStyle = '#3a2a1a'; c.fillRect(tx - 2, tB - 4, 6, 3);
+
+        // ── Carpet / Practice Mat ──
+        const cx = 80, cy = floorY + 8;
+        c.fillStyle = '#5a1414'; c.fillRect(cx, cy, 90, 18);
+        c.fillStyle = '#CD8B3E';
+        c.fillRect(cx, cy, 90, 2); c.fillRect(cx, cy + 16, 90, 2);
+        c.fillRect(cx, cy, 2, 18); c.fillRect(cx + 88, cy, 2, 18);
+        c.fillStyle = '#7a2a2a';
+        c.fillRect(cx + 4, cy + 4, 82, 1);
+        c.fillRect(cx + 4, cy + 13, 82, 1);
+        c.fillStyle = '#CD6B3E';
+        for (let px = cx + 12; px < cx + 82; px += 14) {
+            c.fillRect(px + 2, cy + 6, 2, 2);
+            c.fillRect(px, cy + 8, 2, 2);
+            c.fillRect(px + 4, cy + 8, 2, 2);
+            c.fillRect(px + 2, cy + 10, 2, 2);
+        }
+        // Fringe
+        c.fillStyle = '#CD8B3E';
+        for (let px = cx + 2; px < cx + 88; px += 4) {
+            c.fillRect(px, cy + 18, 2, 3);
+            c.fillRect(px, cy - 3, 2, 3);
+        }
+
+        // ── Diya (oil lamp) ──
+        const dx = tx + 25, dy = tB - 1;
+        c.fillStyle = '#B8860B'; c.fillRect(dx, dy + 1, 6, 3);
+        c.fillRect(dx + 1, dy, 4, 1);
+        c.fillStyle = '#FF6600'; c.fillRect(dx + 2, dy - 4, 2, 4);
+        c.fillStyle = '#FFD700'; c.fillRect(dx + 2, dy - 5, 2, 2);
+        c.fillStyle = '#FFFF44'; c.fillRect(dx + 2, dy - 6, 2, 1);
+        // Warm glow
+        c.fillStyle = 'rgba(255,180,50,0.05)'; c.fillRect(dx - 12, dy - 16, 30, 24);
+        c.fillStyle = 'rgba(255,180,50,0.03)'; c.fillRect(dx - 20, dy - 24, 46, 38);
+
+        // ── Books (right side) ──
+        const bx = PW - 75, by = tB;
+        c.fillStyle = '#4a1a1a'; c.fillRect(bx, by - 5, 16, 5);
+        c.fillStyle = '#1a3a4a'; c.fillRect(bx + 1, by - 9, 14, 4);
+        c.fillStyle = '#4a4a1a'; c.fillRect(bx + 3, by - 12, 10, 3);
+
+        // ── Shelf on wall (left) ──
+        c.fillStyle = '#2a1a10'; c.fillRect(12, 42, 30, 2);
+        c.fillStyle = '#3a2a1a'; c.fillRect(12, 44, 2, 4);
+        c.fillRect(40, 44, 2, 4);
+        // Small pot on shelf
+        c.fillStyle = '#6B4226'; c.fillRect(20, 38, 6, 4);
+        c.fillRect(21, 36, 4, 2);
+        c.fillStyle = '#8B5E3C'; c.fillRect(21, 38, 2, 3);
+
+        // ── Wall art / poster ──
+        c.fillStyle = '#1e1e42'; c.fillRect(110, 22, 22, 28);
+        c.fillStyle = '#2a2a5e'; c.fillRect(111, 23, 20, 26);
+        // Om symbol (simplified pixel art)
+        c.fillStyle = '#5a5a9a';
+        c.fillRect(117, 28, 2, 8);
+        c.fillRect(119, 28, 4, 2);
+        c.fillRect(123, 30, 2, 4);
+        c.fillRect(119, 34, 4, 2);
+        c.fillRect(117, 36, 2, 4);
+        c.fillRect(119, 40, 4, 2);
+        c.fillRect(121, 26, 2, 2);
+        c.fillRect(123, 25, 3, 2);
+
+        // ── Render scaled up ──
+        const dispCtx = bgCanvas.getContext('2d');
+        dispCtx.imageSmoothingEnabled = false;
+        dispCtx.drawImage(off, 0, 0, bgCanvas.width, bgCanvas.height);
+    }
+
+    // Draw background on load
+    drawBackground();
+    </script>
+</body>
+</html>
