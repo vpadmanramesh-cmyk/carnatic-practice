@@ -51,7 +51,7 @@
         }
 
         h1 {
-            font-size: 0.7rem;
+            font-size: 0.9rem;
             font-weight: 400;
             letter-spacing: 0.1em;
             color: #00e5ff;
@@ -78,8 +78,8 @@
             background: #1a1a3e;
             border: 2px solid #2a2a5e;
             border-radius: 2px;
-            padding: 4px 0;
-            width: 40px;
+            padding: 5px 0;
+            width: 46px;
             cursor: pointer;
             transition: all 0.1s ease;
             text-align: center;
@@ -99,7 +99,7 @@
         }
 
         .shruti-number {
-            font-size: 0.5rem;
+            font-size: 0.65rem;
             font-weight: 400;
             color: #8888bb;
             line-height: 1.4;
@@ -108,7 +108,7 @@
         .shruti-btn.active .shruti-number { color: #0a0a1e; }
 
         .western-note {
-            font-size: 0.35rem;
+            font-size: 0.45rem;
             font-weight: 400;
             color: #5a5a8a;
             margin-top: 1px;
@@ -128,7 +128,7 @@
         }
 
         .volume-label {
-            font-size: 0.4rem;
+            font-size: 0.55rem;
             font-weight: 400;
             color: #5a5a8a;
         }
@@ -164,7 +164,7 @@
         }
 
         .status {
-            font-size: 0.4rem;
+            font-size: 0.55rem;
             font-weight: 400;
             color: #3a3a6e;
             white-space: nowrap;
@@ -204,7 +204,7 @@
 
         .listen-btn {
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.55rem;
+            font-size: 0.7rem;
             font-weight: 400;
             color: #00e5ff;
             background: #12122e;
@@ -227,7 +227,7 @@
         }
 
         .listen-hint {
-            font-size: 0.35rem;
+            font-size: 0.5rem;
             color: #3a3a6e;
         }
 
@@ -243,13 +243,13 @@
 
         .swara-play-btn {
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.45rem;
+            font-size: 0.6rem;
             font-weight: 400;
             color: #8888bb;
             background: #12122e;
             border: 2px solid #2a2a5e;
             border-radius: 2px;
-            padding: 5px 7px;
+            padding: 6px 9px;
             cursor: pointer;
             transition: all 0.1s ease;
             user-select: none;
@@ -277,11 +277,12 @@
             border-bottom: 2px solid #2a2a5e;
             width: 100%;
             justify-content: center;
+            background: rgba(10, 10, 30, 0.95);
         }
 
         .tab {
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.55rem;
+            font-size: 0.7rem;
             font-weight: 400;
             color: #5a5a8a;
             background: none;
@@ -316,8 +317,8 @@
 
         .gamakam-select {
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.4rem;
-            padding: 6px 8px;
+            font-size: 0.55rem;
+            padding: 7px 10px;
             border: 2px solid #2a2a5e;
             border-radius: 2px;
             background: #12122e;
@@ -335,14 +336,14 @@
         }
 
         .gamakam-speed-label {
-            font-size: 0.35rem;
+            font-size: 0.55rem;
             font-weight: 400;
             color: #5a5a8a;
         }
 
         .gamakam-hear-btn {
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.4rem;
+            font-size: 0.6rem;
             font-weight: 400;
             color: #00ff88;
             background: #12122e;
@@ -366,7 +367,7 @@
 
         .gamakam-score {
             font-family: 'Press Start 2P', monospace;
-            font-size: 0.45rem;
+            font-size: 0.6rem;
             font-weight: 400;
             color: #3a3a6e;
             min-width: 100px;
@@ -413,13 +414,13 @@
         .readout-swara.silent { color: #2a2a5e; text-shadow: none; }
 
         .readout-detail {
-            font-size: 0.45rem;
+            font-size: 0.6rem;
             font-weight: 400;
             color: #5a5a8a;
         }
 
         .readout-accuracy {
-            font-size: 0.5rem;
+            font-size: 0.65rem;
             font-weight: 400;
         }
 
@@ -447,7 +448,7 @@
         }
 
         .mic-error {
-            font-size: 0.4rem;
+            font-size: 0.55rem;
             color: #ff4466;
             margin-top: 0.5rem;
         }
@@ -456,10 +457,10 @@
 
         @media (max-width: 700px) {
             .header-banner { padding: 8px 10px; gap: 8px; }
-            .shruti-btn { width: 34px; padding: 3px 0; }
-            .shruti-number { font-size: 0.4rem; }
+            .shruti-btn { width: 38px; padding: 3px 0; }
+            .shruti-number { font-size: 0.5rem; }
             .header-divider { display: none; }
-            h1 { font-size: 0.55rem; }
+            h1 { font-size: 0.7rem; }
             input[type="range"] { width: 50px; }
         }
 
@@ -488,7 +489,7 @@
     <div class="main-content">
         <div class="tab-bar">
             <button class="tab active" id="tabPractice">Practice</button>
-            <button class="tab" id="tabGamakam">Gamakam</button>
+            <button class="tab" id="tabGamakam">Gamakam <span style="font-size:0.4rem;color:#ffdd00;vertical-align:super;">BETA</span></button>
         </div>
 
         <div class="pitch-header">
@@ -1126,6 +1127,8 @@
     const Y_RANGE = Y_MAX - Y_MIN; // 24 semitones
     const pitchHistory = new Array(HISTORY_SIZE).fill(null);
     let historyWriteIdx = 0;
+    let octaveShift = 0;        // auto-detected octave offset (multiple of 12)
+    let rawPitchAccum = [];     // recent raw semitones for octave detection
     let canvasCtx = null;
     let dims = null;
 
@@ -1142,7 +1145,7 @@
         canvasCtx.scale(dpr, dpr);
         dims = {
             w, h,
-            labelW: 42,
+            labelW: 54,
             padTop: 16,
             padBot: 16,
         };
@@ -1207,15 +1210,15 @@
             const y = padTop + (1 - (semi + 0.5 - Y_MIN) / Y_RANGE) * graphH;
 
             if (isSa || isP) {
-                ctx.fillStyle = (isMandra || isTara) ? '#5a5a9a' : '#8888cc';
+                ctx.fillStyle = (isMandra || isTara) ? '#6a6aaa' : '#9999dd';
+                ctx.font = (isMandra || isTara)
+                    ? '9px "Press Start 2P", monospace'
+                    : '11px "Press Start 2P", monospace';
+            } else {
+                ctx.fillStyle = (isMandra || isTara) ? '#3a3a6a' : '#5a5a8a';
                 ctx.font = (isMandra || isTara)
                     ? '7px "Press Start 2P", monospace'
-                    : '8px "Press Start 2P", monospace';
-            } else {
-                ctx.fillStyle = (isMandra || isTara) ? '#2a2a5a' : '#4a4a7a';
-                ctx.font = (isMandra || isTara)
-                    ? '5px "Press Start 2P", monospace'
-                    : '6px "Press Start 2P", monospace';
+                    : '9px "Press Start 2P", monospace';
             }
 
             ctx.fillText(swaraName, labelW - 6, y);
@@ -1535,9 +1538,22 @@
             pitchHistory[historyWriteIdx] = null;
         } else {
             const raw = 12 * Math.log2(freq / selectedSaHz);
-            pitchHistory[historyWriteIdx] = raw;
 
-            // Gamakam scoring
+            // Auto-octave detection: track recent pitches and shift by whole
+            // octaves so the singer's voice is centered on the chart
+            rawPitchAccum.push(raw);
+            if (rawPitchAccum.length > 90) rawPitchAccum.shift(); // ~3s window
+            if (rawPitchAccum.length >= 15) {
+                const sorted = rawPitchAccum.slice().sort((a, b) => a - b);
+                const median = sorted[Math.floor(sorted.length / 2)];
+                const chartCenter = (Y_MIN + Y_MAX) / 2; // 7
+                octaveShift = Math.round((chartCenter - median) / 12) * 12;
+            }
+
+            const adjusted = raw + octaveShift;
+            pitchHistory[historyWriteIdx] = adjusted;
+
+            // Gamakam scoring (use octave-adjusted pitch)
             if (activeTab === 'gamakam') {
                 const pattern = GAMAKAM_PATTERNS[selectedPatternIdx];
                 const effectiveDuration = pattern.duration / gamakamSpeedFactor;
@@ -1545,7 +1561,7 @@
                 const cyclePos = ((gamakamFrameCount % framesPerCycle) + framesPerCycle) % framesPerCycle;
                 const t = cyclePos / framesPerCycle;
                 const expected = pattern.curve(t);
-                const diff = Math.abs(raw - expected);
+                const diff = Math.abs(adjusted - expected);
 
                 if (diff <= 0.5) gamakamMatchCount += 1.0;
                 else if (diff <= 1.0) gamakamMatchCount += 0.5;
@@ -1615,6 +1631,8 @@
                     initCanvas();
                     pitchHistory.fill(null);
                     historyWriteIdx = 0;
+                    octaveShift = 0;
+                    rawPitchAccum = [];
                 }, 30);
             } catch (e) {
                 micErrorEl.textContent = 'Microphone access denied. Please allow mic access and try again.';
@@ -1782,10 +1800,17 @@
         c.fillRect(121, 26, 2, 2);
         c.fillRect(123, 25, 3, 2);
 
-        // ── Render scaled up ──
+        // ── Render scaled up (aspect-ratio-preserving cover) ──
         const dispCtx = bgCanvas.getContext('2d');
         dispCtx.imageSmoothingEnabled = false;
-        dispCtx.drawImage(off, 0, 0, bgCanvas.width, bgCanvas.height);
+        const scaleX = bgCanvas.width / PW;
+        const scaleY = bgCanvas.height / PH;
+        const coverScale = Math.max(scaleX, scaleY);
+        const dw = PW * coverScale;
+        const dh = PH * coverScale;
+        const ox = (bgCanvas.width - dw) / 2;
+        const oy = (bgCanvas.height - dh) / 2;
+        dispCtx.drawImage(off, 0, 0, PW, PH, ox, oy, dw, dh);
     }
 
     // Draw background on load
